@@ -197,8 +197,8 @@
         isLocked = false;
         const q = wordData[currentIdx];
         document.getElementById('target-word').innerText = q.word;
-        document.getElementById('quiz-progress-text').innerText = `詞語 ${currentIdx + 1} / 45`;
-        document.getElementById('progress-fill').style.width = `${((currentIdx + 1) / 45) * 100}%`;
+        document.getElementById('quiz-progress-text').innerText = `詞語 ${currentIdx + 1} / 30`;
+        document.getElementById('progress-fill').style.width = `${((currentIdx + 1) / 30) * 100}%`;
         document.getElementById('feedback').innerText = "";
         
         const btns = document.querySelectorAll('.option-btn');
