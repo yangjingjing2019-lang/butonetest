@@ -253,18 +253,18 @@
     function showResult() {
         document.getElementById('quiz-screen').style.display = 'none';
         document.getElementById('summary-screen').style.display = 'flex';
-        const rate = Math.round((score / 45) * 100);
+        const rate = Math.round((score / 30) * 100);
         document.getElementById('result-stats').innerHTML = `
             👤 學習者：${userName}<br>
-            🎯 答對題數：${score} / 45<br>
+            🎯 答對題數：${score} / 30<br>
             📈 準確率：${rate}%
         `;
     }
 
     function shareToWhatsApp() {
         const now = new Date();
-        const rate = Math.round((score / 45) * 100);
-        const text = `【不的變調測驗打卡紀錄】\n👤 姓名：${userName}\n📅 日期：${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()}\n🎯 成績：${score}/45 (${rate}%)\n✅ 狀態：已完成變調練習測驗！`;
+        const rate = Math.round((score / 30) * 100);
+        const text = `【不的變調測驗打卡紀錄】\n👤 姓名：${userName}\n📅 日期：${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()}\n🎯 成績：${score}/30 (${rate}%)\n✅ 狀態：已完成變調練習測驗！`;
         
         navigator.clipboard.writeText(text).then(() => {
             alert("成績資訊已複製！即將前往 WhatsApp...");
