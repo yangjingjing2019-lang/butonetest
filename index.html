@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>不的變調測驗 - VTC PSC</title>
+    <style>
+        :root {
+            --primary-color: #ff85a2;
+            --bg-color: #fff5f7;
+            --correct-color: #2ecc71;
+            --wrong-color: #e74c3c;
+            --whatsapp-green: #25d366;
+            --font-stack: "Yuanti SC", "YouYuan", "STYuanti-SC-Regular", "Microsoft JhengHei", sans-serif;
+        }
+
+        body, html {
+            margin: 0; padding: 0; height: 100%;
+            font-family: var(--font-stack);
+            background-color: var(--bg-color);
+            -webkit-tap-highlight-color: transparent;
+            overflow-x: hidden;
+        }
+
+        .header-title {
+            position: absolute; top: 15px; right: 20px;
+            font-size: 14px; color: #d66d85; z-index: 100; font-weight: bold;
+        }
+
+        .screen {
+            position: fixed; inset: 0; background: var(--bg-color);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            padding: 20px; z-index: 1000;
+        }
+
+        .box {
+            background: #fff; padding: 30px; border-radius: 30px;
+            box-shadow: 0 20px 50px rgba(255, 133, 162, 0.2);
+            max-width: 350px; width: 100%; text-align: center;
+            border: 4px solid white;
+        }
+
+        input {
+            width: 100%; padding: 15px; margin: 12px 0;
+            border: 2px solid #ffe0e6; border-radius: 15px;
+            box-sizing: border-box; font-size: 16px; outline: none;
+        }
+
+        button {
+            background: var(--primary-color); color: white; border: none;
+            padding: 15px; border-radius: 50px; cursor: pointer;
+            font-size: 18px; font-weight: bold;
+            box-shadow: 0 6px 0 #d66d85; transition: 0.1s;
+            width: 100%; margin-top: 10px;
+        }
+        button:active { transform: translateY(3px); box-shadow: 0 2px 0 #d66d85; }
+
+        #quiz-screen { display: none; height: 100%; flex-direction: column; align-items: center; padding-top: 60px; box-sizing: border-box;}
+
+        .quiz-container {
+            background: white; width: 90%; max-width: 400px;
+            padding: 40px 20px; border-radius: 35px;
+            text-align: center; box-shadow: 0 15px 35px rgba(214, 109, 133, 0.1);
+            position: relative;
+        }
+
+        .question-word { font-size: 60px; font-weight: bold; color: #444; margin-bottom: 30px; }
+        .question-word span.bracket { color: var(--primary-color); border-bottom: 4px dashed #ffb3c6; padding: 0 10px; margin-right: 10px;}
+
+        .options-grid { display: grid; grid-template-columns: 1fr; gap: 15px; width: 100%; }
+        .option-btn {
+            background: #fdfdfd; border: 2px solid #ffe0e6;
+            padding: 18px; border-radius: 20px; font-size: 24px;
+            font-family: "Calibri", sans-serif; font-weight: bold;
+            color: #d66d85; cursor: pointer; transition: 0.2s;
+            box-shadow: 0 4px 0 #ffe0e6;
+        }
+        .option-btn.correct { background: var(--correct-color) !important; color: white !important; border-color: #27ae60 !important; box-shadow: 0 4px 0 #27ae60 !important; }
+        .option-btn.wrong { background: var(--wrong-color) !important; color: white !important; border-color: #c0392b !important; box-shadow: 0 4px 0 #c0392b !important; }
+
+        .progress-bar { width: 80%; height: 12px; background: #eee; border-radius: 10px; margin-bottom: 15px; overflow: hidden; }
+        #progress-fill { width: 0%; height: 100%; background: var(--primary-color); transition: 0.3s; }
+
+        .feedback-icon { font-size: 30px; margin-top: 20px; font-weight: bold; height: 40px; }
+        .whatsapp-btn { background: var(--whatsapp-green) !important; box-shadow: 0 6px 0 #128c7e !important; }
+    </style>
+</head>
+<body>
+
+<div class="header-title">不的變調測驗練習</div>
+
+<audio id="audio-sprite" src="不的變調.mp3" preload="auto"></audio>
+<audio id="audio-correct" src="https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3"></audio>
+<audio id="audio-wrong" src="https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3"></audio>
+
+<div id="login-screen" class="screen">
+    <div class="box">
+        <h2 style="color: var(--primary-color);">✍️ 變調挑戰</h2>
+        <p style="font-size: 14px; color: #b5838d; margin-bottom: 20px;">請根據詞語選擇正確的讀音</p>
+        <input type="text" id="username" placeholder="請輸入您的姓名">
+        <input type="password" id="password" placeholder="密碼">
+        <button onclick="startQuiz()">進入測驗 🚀</button>
+        <div style="font-size: 11px; color: #aaa; margin-top: 30px; line-height: 1.5;">
+            職業訓練局普通話培訓測試中心 版權所有
+        </div>
+    </div>
+</div>
+
+<div id="quiz-screen">
+    <div class="progress-bar"><div id="progress-fill"></div></div>
+    <div style="margin-bottom: 15px; color: #d66d85; font-weight: bold; font-size: 18px;" id="quiz-progress-text">詞語 1 / 45</div>
+    
+    <div class="quiz-container">
+        <div class="question-word"><span class="bracket">( )</span><span id="target-word">不怕/span></div>
+        <div class="options-grid">
+            <button class="option-btn" onclick="handleChoice('bú', this)">bú</button>
+            <button class="option-btn" onclick="handleChoice('bù', this)">bù</button>
+            <button class="option-btn" onclick="handleChoice('bu', this)">bu</button>
+        </div>
+        <div id="feedback" class="feedback-icon"></div>
+    </div>
+    
+    <button style="width: 150px; margin-top: 30px; background: #ffd43b; box-shadow: 0 6px 0 #f59f00; color: #856404; font-size: 16px;" onclick="playCurrentWordAudio()">🔈 聽示範語音</button>
+</div>
+
+<div id="summary-screen" class="screen" style="display: none;">
+    <div class="box">
+        <h2 style="color: var(--primary-color); font-size: 32px;">🎊 練習完成</h2>
+        <div id="result-stats" style="font-size: 18px; margin: 20px 0; line-height: 1.8; color: #444;"></div>
+        <button class="whatsapp-btn" onclick="shareToWhatsApp()">✅ 傳送打卡訊息</button>
+        <button style="background:#aaa; box-shadow:0 6px 0 #888; margin-top:15px;" onclick="location.reload()">重新挑戰</button>
+    </div>
+</div>
+
+ 
+ <script>
+    const wordData = [
+        { word: "不禁", ans: "bù", start: 1, duration: 2 },
+        { word: "不料", ans: "bú", start: 3.5, duration: 2 },
+        { word: "不安", ans: "bù", start: 6, duration: 2 },
+        { word: "不要", ans: "bú", start: 8.5, duration: 2 },
+        { word: "不便", ans: "bú", start: 11, duration: 2 },
+        { word: "不行", ans: "bù", start: 13.5, duration: 2 },
+        { word: "不明", ans: "bù", start: 16, duration: 2 },
+        { word: "不夠", ans: "bú", start: 18.5, duration: 2 },
+        { word: "不出", ans: "bù", start: 21, duration: 2 },
+        { word: "不對", ans: "bú", start: 23.5, duration: 2 },
+        { word: "不解", ans: "bù", start: 26, duration: 2 },
+        { word: "不多", ans: "bù", start: 28.5, duration: 2 },
+        { word: "不怕", ans: "bú", start: 31, duration: 2 },
+        { word: "不才", ans: "bù", start: 33.5, duration: 2 },
+        { word: "不顧", ans: "bú", start: 36, duration: 2 }, 
+        { word: "懂不懂", ans: "bu", start: 61, duration: 2 },
+        { word: "不及", ans: "bù", start: 38.5, duration: 2 },
+        { word: "不斷", ans: "bú", start: 41, duration: 2 },
+        { word: "不好", ans: "bù", start: 43.5, duration: 2 },
+        { word: "不見", ans: "bú", start: 46, duration: 2 },
+        { word: "不忙", ans: "bù", start: 48.5, duration: 2 },
+        { word: "不會", ans: "bú", start: 51, duration: 2 },
+        { word: "不利", ans: "bú", start: 53.5, duration: 2 },
+        { word: "不等", ans: "bù", start: 56, duration: 2 },
+        { word: "不過", ans: "bú", start: 58.5, duration: 2 },
+        { word: "能不能", ans: "bu", start: 66, duration: 2 },
+        { word: "不是", ans: "bú", start: 68.5, duration: 2 },
+        { word: "要不要", ans: "bu", start: 63.5, duration: 2 },
+        { word: "不必", ans: "bú", start: 71, duration: 2 }
+    ];
+
+
+    let currentIdx = 0;
+    let score = 0;
+    let userName = "";
+    let isLocked = false;
+    const spriteAudio = document.getElementById('audio-sprite');
+
+    function startQuiz() {
+        const pass = document.getElementById('password').value;
+        userName = document.getElementById('username').value;
+        if (!userName) { alert("請輸入姓名"); return; }
+        if (pass === "vtcpsc") {
+            spriteAudio.play().then(() => {
+                spriteAudio.pause();
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('quiz-screen').style.display = 'flex';
+                showQuestion();
+            }).catch(e => {
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('quiz-screen').style.display = 'flex';
+                showQuestion();
+            });
+        } else {
+            alert("密碼錯誤，請重新輸入");
+        }
+    }
+
+    function showQuestion() {
+        isLocked = false;
+        const q = wordData[currentIdx];
+        document.getElementById('target-word').innerText = q.word;
+        document.getElementById('quiz-progress-text').innerText = `詞語 ${currentIdx + 1} / 45`;
+        document.getElementById('progress-fill').style.width = `${((currentIdx + 1) / 45) * 100}%`;
+        document.getElementById('feedback').innerText = "";
+        
+        const btns = document.querySelectorAll('.option-btn');
+        btns.forEach(b => b.className = 'option-btn');
+    }
+
+    function handleChoice(choice, btn) {
+        if (isLocked) return;
+        isLocked = true;
+        
+        const q = wordData[currentIdx];
+        const feedback = document.getElementById('feedback');
+        
+        if (choice === q.ans) {
+            score++;
+            btn.classList.add('correct');
+            feedback.style.color = "#2ecc71";
+            feedback.innerText = "太棒了！答對了 ✨";
+            document.getElementById('audio-correct').play();
+        } else {
+            btn.classList.add('wrong');
+            feedback.style.color = "#e74c3c";
+            feedback.innerText = "再接再厲！正確是 " + q.ans;
+            document.getElementById('audio-wrong').play();
+            // 標示正確答案
+            document.querySelectorAll('.option-btn').forEach(b => {
+                if (b.innerText === q.ans) b.classList.add('correct');
+            });
+        }
+
+        // 選完延遲一下播放正確讀音
+        setTimeout(() => { playCurrentWordAudio(); }, 600);
+
+        // 停留時間長一點讓學生看清答案並聽完讀音
+        setTimeout(() => {
+            if (currentIdx < wordData.length - 1) {
+                currentIdx++;
+                showQuestion();
+            } else {
+                showResult();
+            }
+        }, 2800);
+    }
+
+    function playCurrentWordAudio() {
+        const q = wordData[currentIdx];
+        spriteAudio.currentTime = q.start;
+        spriteAudio.play();
+        setTimeout(() => { spriteAudio.pause(); }, q.duration * 1000);
+    }
+
+    function showResult() {
+        document.getElementById('quiz-screen').style.display = 'none';
+        document.getElementById('summary-screen').style.display = 'flex';
+        const rate = Math.round((score / 45) * 100);
+        document.getElementById('result-stats').innerHTML = `
+            👤 學習者：${userName}<br>
+            🎯 答對題數：${score} / 45<br>
+            📈 準確率：${rate}%
+        `;
+    }
+
+    function shareToWhatsApp() {
+        const now = new Date();
+        const rate = Math.round((score / 45) * 100);
+        const text = `【不的變調測驗打卡紀錄】\n👤 姓名：${userName}\n📅 日期：${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()}\n🎯 成績：${score}/45 (${rate}%)\n✅ 狀態：已完成變調練習測驗！`;
+        
+        navigator.clipboard.writeText(text).then(() => {
+            alert("成績資訊已複製！即將前往 WhatsApp...");
+            window.location.href = `whatsapp://send?text=${encodeURIComponent(text)}`;
+        }).catch(() => {
+            window.location.href = `whatsapp://send?text=${encodeURIComponent(text)}`;
+        });
+    }
+</script>
+
+</body>
+
+</html>
